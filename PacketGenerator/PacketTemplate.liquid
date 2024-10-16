@@ -1,0 +1,81 @@
+﻿#pragma once
+
+#include <cstdint>
+{{- for include in includes }}
+#include {{ include }}
+{{- end }}
+
+#include "packet.h"
+
+{{ $max_length = 0 -}}
+{{- for packet in packet_info_list -}}
+  {{- $current_length = packet.prefix.size + packet.name.size -}}
+  {{- if $current_length > $max_length -}}
+    {{- $max_length = $current_length -}}
+  {{- end -}}
+{{- end -}}
+enum class PacketType : uint8_t {
+{{- for packet in packet_info_list }}
+  k{{- packet.prefix }}{{ packet.name | string.pad_right $max_length }} = {{ packet.type }},
+{{- end }}
+};
+
+#pragma pack(push, 1)
+
+namespace sc {
+{{- for packet in packet_info_list }}
+{{- if !packet.is_from_client }}
+  struct {{ packet.name }} {
+    {{- for member in packet.members }}
+    {{ member.cpp_type_name }} {{ member.cpp_name }};
+    {{- end }}
+
+    Packet& Serialize(Packet& packet) const {
+    {{- for member in packet.members }}
+      packet << {{ member.cpp_name }};
+    {{- end }}
+
+      return packet;
+    }
+
+    Packet& Deserialize(Packet& packet) {
+    {{- for member in packet.members }}
+      packet >> {{ member.cpp_name }};
+    {{- end }}
+
+      return packet;
+    }
+  };
+{{ end }}
+{{- end }}
+}
+
+namespace cs {
+{{- for packet in packet_info_list }}
+{{- if packet.is_from_client}}
+  struct {{ packet.name }} {
+    {{- for member in packet.members }}
+    {{ member.cpp_type_name }} {{ member.cpp_name }};
+    {{- end }}
+
+    Packet& Serialize(Packet& packet) const {
+    {{- for member in packet.members }}
+      packet << {{ member.cpp_name }};
+    {{- end }}
+
+      return packet;
+    }
+
+    Packet& Deserialize(Packet& packet) {
+    {{- for member in packet.members }}
+      packet >> {{ member.cpp_name }};
+    {{- end }}
+
+      return packet;
+    }
+  };
+{{ end }}
+{{- end }}
+}
+
+#pragma pack(pop)

@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "PacketGenerator": {
+      "commandName": "Project",
+      "commandLineArgs": "--p $(MSBuildProjectDirectory)/../PacketDefinitions --a $(MSBuildProjectDirectory)/../PacketDefinitions/bin/Release --o . --t . --use-wide-string",
+      "hotReloadEnabled": false
+    }
+  }
+}
